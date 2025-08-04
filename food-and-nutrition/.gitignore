@@ -31,7 +31,34 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
 .env*.local
+
+# API Keys and secrets
+*.key
+**/.env
+**/requirements.txt.bak
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+.cache/
+.pytest_cache/
+
+# AI Models cache
+.transformers_cache/
+.huggingface/
+
+# Logs
+*.log
+logs/
 
 # typescript
 *.tsbuildinfo
