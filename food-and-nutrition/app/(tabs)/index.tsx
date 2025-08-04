@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Camera, PermissionResponse } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Alert,
   Dimensions,
@@ -11,6 +11,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View
 } from 'react-native';
 import { Button, Card, Chip, Surface } from 'react-native-paper';
@@ -25,24 +26,16 @@ export default function CameraScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const { user } = useAuth();
-  const [cameraPermission, setCameraPermission] = useState<PermissionResponse | null>(null);
+  const [permission, requestPermission] = useCameraPermissions();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<FoodAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const cameraRef = useRef<CameraView>(null);
 
-  // Check camera permissions on mount
-  React.useEffect(() => {
-    (async () => {
-      const cameraPermission = await Camera.requestCameraPermissionsAsync();
-      setCameraPermission(cameraPermission);
-    })();
-  }, []);
-  
   const requestPermissions = async () => {
-    if (!cameraPermission?.granted) {
-      const result = await Camera.requestCameraPermissionsAsync();
-      setCameraPermission(result);
+    if (!permission?.granted) {
+      const result = await requestPermission();
       if (!result.granted) {
         Alert.alert(
           'Camera Permission Required',
@@ -59,6 +52,29 @@ export default function CameraScreen() {
     if (!hasPermission) return;
 
     setShowCamera(true);
+  };
+
+  const capturePhoto = async () => {
+    if (cameraRef.current) {
+      try {
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 0.8,
+          base64: false,
+        });
+        if (photo) {
+          setSelectedImage(photo.uri);
+          setShowCamera(false);
+          setAnalysisResult(null);
+        }
+      } catch (error) {
+        console.error('Error taking picture:', error);
+        Alert.alert('Error', 'Failed to take picture. Please try again.');
+      }
+    }
+  };
+
+  const closeCameraView = () => {
+    setShowCamera(false);
   };
 
   const pickImageFromGallery = async () => {
@@ -211,10 +227,37 @@ export default function CameraScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      {showCamera ? (
+        <View style={styles.cameraContainer}>
+          <CameraView 
+            ref={cameraRef}
+            style={styles.camera}
+            facing="back"
+          >
+            <View style={styles.cameraControls}>
+              <TouchableOpacity 
+                style={[styles.cameraButton, styles.closeButton, { backgroundColor: colors.surface }]}
+                onPress={closeCameraView}
+              >
+                <Ionicons name="close" size={24} color={colors.onSurface} />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.captureButton, { backgroundColor: colors.primary }]}
+                onPress={capturePhoto}
+              >
+                <Ionicons name="camera" size={32} color={colors.onPrimary} />
+              </TouchableOpacity>
+              
+              <View style={styles.spacer} />
+            </View>
+          </CameraView>
+        </View>
+      ) : (
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.onBackground }]}>
             Food Analyzer
@@ -327,10 +370,11 @@ export default function CameraScreen() {
             </View>
           </>
         )}
-      </ScrollView>
+        </ScrollView>
+      )}
     </View>
   );
-    }
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -467,5 +511,42 @@ const styles = StyleSheet.create({
   resetButton: {
     flex: 1,
     borderRadius: 12,
+  },
+  cameraContainer: {
+    flex: 1,
+  },
+  camera: {
+    flex: 1,
+  },
+  cameraControls: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    padding: 30,
+    paddingBottom: 50,
+  },
+  cameraButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: -350,
+    left: 0,
+  },
+  captureButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  spacer: {
+    width: 50,
   },
 });
