@@ -174,13 +174,13 @@ def predict_food_and_nutrition(image_bytes: bytes) -> Dict[str, Any]:
         # Process image and make prediction
         try:
             start_time = time.time()
-            inputs = model_manager.processor(images=image, return_tensors="pt")
+            inputs = model_manager.processor(images=image, return_tensors="pt") # type: ignore
             
             with torch.no_grad():
-                logits = model_manager.model(**inputs).logits
+                logits = model_manager.model(**inputs).logits # type: ignore
                 predicted_idx = logits.argmax(-1).item()
                 confidence = torch.softmax(logits, dim=-1).max().item()
-                label = model_manager.model.config.id2label[predicted_idx]
+                label = model_manager.model.config.id2label[predicted_idx] # type: ignore
             
             inference_time = time.time() - start_time
             logger.info(f"Food prediction: {label} (confidence: {confidence:.3f}, time: {inference_time:.3f}s)")
