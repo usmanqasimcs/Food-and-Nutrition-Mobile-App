@@ -45,13 +45,20 @@ class NutritionService {
         name: 'food_image.jpg',
       } as any);
 
+      // Create an AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
+
       const response = await fetch(`${this.baseUrl}/analyze-food/`, {
         method: 'POST',
         headers: {
           // Don't set Content-Type for FormData, let the browser set it
         },
         body: formData,
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
@@ -64,7 +71,12 @@ class NutritionService {
       
       // Show more specific error messages
       if (error instanceof Error) {
-        if (error.message.includes('Network request failed') || error.message.includes('fetch')) {
+        if (error.name === 'AbortError') {
+          Alert.alert(
+            'Request Timeout',
+            'The analysis is taking too long. Please try again with a smaller image or check your connection.'
+          );
+        } else if (error.message.includes('Network request failed') || error.message.includes('fetch')) {
           Alert.alert(
             'Connection Error',
             'Cannot connect to the analysis server. Make sure your FastAPI server is running and accessible.',
