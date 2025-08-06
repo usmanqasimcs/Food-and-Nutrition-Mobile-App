@@ -39,6 +39,8 @@ class NutritionService {
   async analyzeImage(imageUri: string): Promise<FoodAnalysisResult | null> {
     try {
       const formData = new FormData();
+      
+      // React Native file upload format
       formData.append('file', {
         uri: imageUri,
         type: 'image/jpeg',
@@ -49,11 +51,11 @@ class NutritionService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
 
-      const response = await fetch(`${this.baseUrl}/analyze-food/`, {
+      console.log('Sending request to:', `${this.baseUrl}/analyze`);
+      console.log('Image URI:', imageUri);
+
+      const response = await fetch(`${this.baseUrl}/analyze`, {
         method: 'POST',
-        headers: {
-          // Don't set Content-Type for FormData, let the browser set it
-        },
         body: formData,
         signal: controller.signal,
       });
@@ -64,7 +66,35 @@ class NutritionService {
         throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
       }
 
-      const result = await response.json();
+      const rawResult = await response.json();
+      
+      // Check for server errors
+      if (rawResult.error) {
+        throw new Error(rawResult.error);
+      }
+      
+      // Transform the response to match our interface
+      const result: FoodAnalysisResult = {
+        predicted_class: rawResult.predicted_food || 'unknown',
+        confidence: rawResult.confidence || 0,
+        nutrition: rawResult.nutrition || {
+          name: rawResult.predicted_food || 'unknown',
+          calories: 0,
+          serving_size_g: 100,
+          fat_total_g: 0,
+          fat_saturated_g: 0,
+          protein_g: 0,
+          sodium_mg: 0,
+          potassium_mg: 0,
+          cholesterol_mg: 0,
+          carbohydrates_total_g: 0,
+          fiber_g: 0,
+          sugar_g: 0,
+        },
+        processing_time: rawResult.inference_time || 0,
+        timestamp: new Date().toISOString(),
+      };
+      
       return result;
     } catch (error) {
       console.error('Error analyzing image:', error);
@@ -96,7 +126,7 @@ class NutritionService {
         } else if (error.message.includes('404')) {
           Alert.alert(
             'Endpoint Not Found',
-            'The /analyze-food/ endpoint was not found. Please check your FastAPI server.'
+            'The /analyze endpoint was not found. Please check your FastAPI server.'
           );
         } else {
           Alert.alert(

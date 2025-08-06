@@ -24,7 +24,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 export default function CameraScreen() {
   const router = useRouter();
-  const { colors, isDark } = useTheme();
+  const { colors, isDark, theme, setTheme } = useTheme();
   const { user } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -32,6 +32,11 @@ export default function CameraScreen() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const cameraRef = useRef<CameraView>(null);
+
+  const toggleTheme = () => {
+    const newTheme = isDark ? 'light' : 'dark';
+    setTheme(newTheme);
+  };
 
   const requestPermissions = async () => {
     if (!permission?.granted) {
@@ -152,76 +157,104 @@ export default function CameraScreen() {
     setAnalysisResult(null);
   };
 
-  const NutritionCard = ({ nutrition }: { nutrition: any }) => (
-    <Card style={[styles.nutritionCard, { backgroundColor: colors.surface }]}>
-      <Card.Content>
-        <Text style={[styles.nutritionTitle, { color: colors.onSurface }]}>
-          Nutrition Facts
-        </Text>
-        <View style={styles.nutritionGrid}>
-          <View style={styles.nutritionItem}>
-            <Text style={[styles.nutritionValue, { color: colors.primary }]}>
-              {nutrition.calories}
+  const NutritionCard = ({ nutrition }: { nutrition: any }) => {
+    // If nutrition is missing or contains an error, show a user-friendly message
+    if (!nutrition || nutrition.error) {
+      return (
+        <Card style={[styles.nutritionCard, { 
+          backgroundColor: colors.surface,
+          borderWidth: 1,
+          borderColor: colors.outline,
+        }]}> 
+          <Card.Content>
+            <Text style={[styles.nutritionTitle, { color: colors.onSurface }]}>Nutrition Facts</Text>
+            <Text style={{ color: colors.error, textAlign: 'center', marginTop: 16, fontSize: 16 }}>
+              {nutrition?.error || 'No nutrition data found.'}
             </Text>
-            <Text style={[styles.nutritionLabel, { color: colors.onSurfaceVariant }]}>
-              Calories
-            </Text>
+            {nutrition?.suggestion && (
+              <Text style={{ color: colors.onSurfaceVariant, textAlign: 'center', marginTop: 8 }}>
+                {nutrition.suggestion}
+              </Text>
+            )}
+          </Card.Content>
+        </Card>
+      );
+    }
+    // Otherwise, show nutrition values
+    return (
+      <Card style={[styles.nutritionCard, { 
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.outline,
+      }]}> 
+        <Card.Content>
+          <Text style={[styles.nutritionTitle, { color: colors.onSurface }]}> 
+            Nutrition Facts
+          </Text>
+          <View style={styles.nutritionGrid}>
+            <View style={styles.nutritionItem}>
+              <Text style={[styles.nutritionValue, { color: colors.primary }]}> 
+                {nutrition.calories || 0}
+              </Text>
+              <Text style={[styles.nutritionLabel, { color: colors.onSurface }]}> 
+                Calories
+              </Text>
+            </View>
+            <View style={styles.nutritionItem}>
+              <Text style={[styles.nutritionValue, { color: colors.primary }]}> 
+                {nutrition.protein_g || 0}g
+              </Text>
+              <Text style={[styles.nutritionLabel, { color: colors.onSurface }]}> 
+                Protein
+              </Text>
+            </View>
+            <View style={styles.nutritionItem}>
+              <Text style={[styles.nutritionValue, { color: colors.primary }]}> 
+                {nutrition.carbohydrates_total_g || 0}g
+              </Text>
+              <Text style={[styles.nutritionLabel, { color: colors.onSurface }]}> 
+                Carbs
+              </Text>
+            </View>
+            <View style={styles.nutritionItem}>
+              <Text style={[styles.nutritionValue, { color: colors.primary }]}> 
+                {nutrition.fat_total_g || 0}g
+              </Text>
+              <Text style={[styles.nutritionLabel, { color: colors.onSurface }]}> 
+                Fat
+              </Text>
+            </View>
           </View>
-          <View style={styles.nutritionItem}>
-            <Text style={[styles.nutritionValue, { color: colors.primary }]}>
-              {nutrition.protein_g}g
-            </Text>
-            <Text style={[styles.nutritionLabel, { color: colors.onSurfaceVariant }]}>
-              Protein
-            </Text>
+          <View style={styles.nutritionDetails}>
+            <View style={styles.nutritionRow}>
+              <Text style={[styles.detailLabel, { color: colors.onSurface }]}> 
+                Fiber
+              </Text>
+              <Text style={[styles.detailValue, { color: colors.onSurface }]}> 
+                {nutrition.fiber_g || 0}g
+              </Text>
+            </View>
+            <View style={styles.nutritionRow}>
+              <Text style={[styles.detailLabel, { color: colors.onSurface }]}> 
+                Sugar
+              </Text>
+              <Text style={[styles.detailValue, { color: colors.onSurface }]}> 
+                {nutrition.sugar_g || 0}g
+              </Text>
+            </View>
+            <View style={styles.nutritionRow}>
+              <Text style={[styles.detailLabel, { color: colors.onSurface }]}> 
+                Sodium
+              </Text>
+              <Text style={[styles.detailValue, { color: colors.onSurface }]}> 
+                {nutrition.sodium_mg || 0}mg
+              </Text>
+            </View>
           </View>
-          <View style={styles.nutritionItem}>
-            <Text style={[styles.nutritionValue, { color: colors.primary }]}>
-              {nutrition.carbohydrates_total_g}g
-            </Text>
-            <Text style={[styles.nutritionLabel, { color: colors.onSurfaceVariant }]}>
-              Carbs
-            </Text>
-          </View>
-          <View style={styles.nutritionItem}>
-            <Text style={[styles.nutritionValue, { color: colors.primary }]}>
-              {nutrition.fat_total_g}g
-            </Text>
-            <Text style={[styles.nutritionLabel, { color: colors.onSurfaceVariant }]}>
-              Fat
-            </Text>
-          </View>
-        </View>
-        
-        <View style={styles.nutritionDetails}>
-          <View style={styles.nutritionRow}>
-            <Text style={[styles.detailLabel, { color: colors.onSurfaceVariant }]}>
-              Fiber
-            </Text>
-            <Text style={[styles.detailValue, { color: colors.onSurface }]}>
-              {nutrition.fiber_g}g
-            </Text>
-          </View>
-          <View style={styles.nutritionRow}>
-            <Text style={[styles.detailLabel, { color: colors.onSurfaceVariant }]}>
-              Sugar
-            </Text>
-            <Text style={[styles.detailValue, { color: colors.onSurface }]}>
-              {nutrition.sugar_g}g
-            </Text>
-          </View>
-          <View style={styles.nutritionRow}>
-            <Text style={[styles.detailLabel, { color: colors.onSurfaceVariant }]}>
-              Sodium
-            </Text>
-            <Text style={[styles.detailValue, { color: colors.onSurface }]}>
-              {nutrition.sodium_mg}mg
-            </Text>
-          </View>
-        </View>
-      </Card.Content>
-    </Card>
-  );
+        </Card.Content>
+      </Card>
+    );
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -233,25 +266,24 @@ export default function CameraScreen() {
             ref={cameraRef}
             style={styles.camera}
             facing="back"
-          >
-            <View style={styles.cameraControls}>
-              <TouchableOpacity 
-                style={[styles.cameraButton, styles.closeButton, { backgroundColor: colors.surface }]}
-                onPress={closeCameraView}
-              >
-                <Ionicons name="close" size={24} color={colors.onSurface} />
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.captureButton, { backgroundColor: colors.primary }]}
-                onPress={capturePhoto}
-              >
-                <Ionicons name="camera" size={32} color={colors.onPrimary} />
-              </TouchableOpacity>
-              
-              <View style={styles.spacer} />
-            </View>
-          </CameraView>
+          />
+          <View style={styles.cameraControls}>
+            <TouchableOpacity 
+              style={[styles.cameraButton, styles.closeButton, { backgroundColor: colors.surface }]}
+              onPress={closeCameraView}
+            >
+              <Ionicons name="close" size={24} color={colors.onSurface} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.captureButton, { backgroundColor: colors.primary }]}
+              onPress={capturePhoto}
+            >
+              <Ionicons name="camera" size={32} color={colors.onPrimary} />
+            </TouchableOpacity>
+            
+            <View style={styles.spacer} />
+          </View>
         </View>
       ) : (
         <ScrollView 
@@ -259,12 +291,26 @@ export default function CameraScreen() {
           showsVerticalScrollIndicator={false}
         >
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.onBackground }]}>
-            Food Analyzer
-          </Text>
-          <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
-            Take a photo or select from gallery to analyze
-          </Text>
+          <View style={styles.header}>
+            <View style={styles.headerTextContainer}>
+              <Text style={[styles.title, { color: colors.onBackground }]}>
+                Food Analyzer
+              </Text>
+              <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
+                Take a photo or select from gallery to analyze
+              </Text>
+            </View>
+            <TouchableOpacity 
+              style={[styles.themeToggle, { backgroundColor: colors.surfaceVariant }]}
+              onPress={toggleTheme}
+            >
+              <Ionicons 
+                name={isDark ? 'sunny' : 'moon'} 
+                size={24} 
+                color={colors.onSurfaceVariant} 
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {!selectedImage ? (
@@ -311,7 +357,7 @@ export default function CameraScreen() {
             onPress={pickImageFromGallery}
             icon="image"
             style={[styles.actionButton, { borderColor: colors.outline }]}
-            textColor={colors.primary}
+            textColor={colors.onSurface}
           >
             Gallery
           </Button>
@@ -334,12 +380,16 @@ export default function CameraScreen() {
 
         {analysisResult && (
           <>
-            <Card style={[styles.resultCard, { backgroundColor: colors.surface }]}>
+            <Card style={[styles.resultCard, { 
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.outline,
+            }]}>
               <Card.Content>
                 <Text style={[styles.foodName, { color: colors.onSurface }]}>
                   {analysisResult.predicted_class.replace(/_/g, ' ').toUpperCase()}
                 </Text>
-                <Text style={[styles.processingTime, { color: colors.onSurfaceVariant }]}>
+                <Text style={[styles.processingTime, { color: colors.onSurface }]}>
                   Analysis completed in {analysisResult.processing_time.toFixed(2)}s
                 </Text>
               </Card.Content>
@@ -387,6 +437,17 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 30,
+  },
+  themeToggle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  headerTextContainer: {
+    alignItems: 'center',
   },
   title: {
     fontSize: 28,
@@ -473,17 +534,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 20,
+    paddingHorizontal: 8,
   },
   nutritionItem: {
     alignItems: 'center',
+    flex: 1,
   },
   nutritionValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   nutritionLabel: {
-    fontSize: 12,
+    fontSize: 13,
     marginTop: 4,
+    textAlign: 'center',
   },
   nutritionDetails: {
     gap: 8,
@@ -519,10 +583,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cameraControls: {
-    flex: 1,
-    backgroundColor: 'transparent',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     justifyContent: 'space-between',
     padding: 30,
     paddingBottom: 50,
@@ -536,8 +602,8 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: -350,
-    left: 0,
+    top: -400,
+    left: 30,
   },
   captureButton: {
     width: 70,

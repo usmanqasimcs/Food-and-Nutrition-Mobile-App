@@ -5,10 +5,10 @@ const getApiBaseUrl = () => {
   if (__DEV__) {
     // Development environment
     if (Platform.OS === 'android') {
-      // For Android emulator, use 10.0.2.2
       // For Android device on same network, use your computer's IP
-      return 'http://10.0.2.2:8000'; // Android emulator
-      // Alternative: return 'http://192.168.82.108:8000'; // Use your actual IP
+      // For Android emulator, use 10.0.2.2
+      return 'http://192.168.82.108:8000'; // Use your actual network IP first
+      // Alternative: return 'http://10.0.2.2:8000'; // Android emulator fallback
     }
     if (Platform.OS === 'ios') {
       return 'http://localhost:8000'; // iOS simulator can use localhost
