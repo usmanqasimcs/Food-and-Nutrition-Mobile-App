@@ -217,16 +217,6 @@ class FoodClassifier:
                 
                 logger.info(f"Prediction: {readable_label} (confidence: {confidence:.3f}, time: {inference_time:.3f}s)")
                 
-                # Check confidence threshold
-                if confidence < 0.3:
-                    return {
-                        "predicted_food": readable_label,
-                        "confidence": round(confidence, 3),
-                        "warning": "Low confidence prediction. Consider using a clearer image",
-                        "nutrition": {"error": "Skipped nutrition lookup due to low confidence"},
-                        "inference_time": round(inference_time, 3)
-                    }
-                
             except Exception as e:
                 logger.error(f"Model inference error: {e}")
                 return {"error": f"Failed to analyze image: {str(e)}"}

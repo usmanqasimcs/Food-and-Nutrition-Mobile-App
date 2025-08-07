@@ -5,10 +5,7 @@ const getApiBaseUrl = () => {
   if (__DEV__) {
     // Development environment
     if (Platform.OS === 'android') {
-      // For Android device on same network, use your computer's IP
-      // For Android emulator, use 10.0.2.2
-      return 'http://192.168.82.108:8000'; // Use your actual network IP first
-      // Alternative: return 'http://10.0.2.2:8000'; // Android emulator fallback
+      return 'http://192.168.40.108:8000';
     }
     if (Platform.OS === 'ios') {
       return 'http://localhost:8000'; // iOS simulator can use localhost
@@ -16,8 +13,7 @@ const getApiBaseUrl = () => {
     return 'http://localhost:8000'; // Web/other platforms
   }
   
-  // Production environment - replace with your actual server URL
-  return 'https://your-api-server.com';
+  return 'http://192.168.40.108:8000';
 };
 
 export const API_CONFIG = {
@@ -32,5 +28,5 @@ export const API_CONFIG = {
 export const ALTERNATIVE_URLS = {
   LOCALHOST: 'http://localhost:8000',
   ANDROID_EMULATOR: 'http://10.0.2.2:8000',
-  LOCAL_NETWORK: 'http://192.168.82.108:8000', // Your current IP
+  LOCAL_NETWORK: 'http://192.168.40.108:8000', // Current IP
 };

@@ -9,7 +9,6 @@ import { useTheme } from '../../contexts/ThemeContext';
 
 export default function TabLayout() {
   const { colors, isDark } = useTheme();
-
   return (
     <Tabs
       screenOptions={{
